@@ -6,7 +6,7 @@ def agregarRegistro(req):
     sismo = req["fechaSismo"]
     query = data.consultar_sismos(sismo)
     print(query)
-    print("test...")
+    print("test...2")
     return True
     #gs.subir_archivo(ruta=ruta)
 
