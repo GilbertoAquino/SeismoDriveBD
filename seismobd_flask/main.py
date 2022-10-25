@@ -42,9 +42,7 @@ def agregaSis():
         response = make_response(jsonify({"resultado":"bad request"}))
         return response
     db.session.add(res)
-    print("testo")
     db.session.commit()
-    print("loko")
     response = make_response(jsonify({"resultado":"ok"}))
     return response
 

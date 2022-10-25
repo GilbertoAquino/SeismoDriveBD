@@ -11,13 +11,14 @@ def auth():
     gauth.LocalWebserverAuth()
     return gauth
 
-def subir_archivo(ruta,id_folder):
+def subir_archivo(ruta="",id_folder=id_folder):
     response = True
     try:
         gd = login()
         archivo = gd.CreateFile({'parents':[{'kind':"drive#fileLink", "id":id_folder}]})
         archivo['title'] = ruta.split("/")[-1]
         archivo.SetContentFile(ruta)
+        print("test")
         archivo.Upload()
     except:
         response = False
