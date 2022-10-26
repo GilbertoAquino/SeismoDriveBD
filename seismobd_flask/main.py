@@ -1,19 +1,26 @@
+from enum import unique
 from sqlalchemy import true
 from flask import Flask,jsonify,make_response,request
 from flask_sqlalchemy import SQLAlchemy
+from flask_migrate import Migrate
 import driveService as gs
 import services
 import data
+import os
 
-app = Flask(__name__)
+app = Flask(__name__,
+            static_url_path='/datos', 
+            static_folder='./datos')
 db_name = "seismobd.sqlite3"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_name  
 db=SQLAlchemy(app)
+migrate = Migrate(app,db,render_as_batch=True)
 
 @app.route("/",methods=["GET"])
 def hello_world():
     #g = servicios.auth()
+    db.create_all()
     response = make_response(jsonify({"resultado":"ok"}))
     return response
 
@@ -28,10 +35,12 @@ def consultarDatos():
 def agregarReg():
     req = request.get_json(silent=True)
     res = services.agregarRegistro(req)
-    if (res):
-        response = make_response(jsonify({"resultado":"ok"}))
-    else:
+    if (res==False):
         response = make_response(jsonify({"resultado":"bad request"}))
+    else:
+        db.session.add(res)
+        db.session.commit()
+        response = make_response(jsonify({"resultado":"ok"}))
     return response
 
 @app.route("/agregarSismo",methods=["POST"])
@@ -51,6 +60,35 @@ def consultaSis():
     response = data.consultaTodoSismo()
     return make_response(jsonify(Sismos=[i.serialize for i in response]))
 
+@app.route("/agregarInstituto",methods=["POST"])
+def agregaInstituto():
+    req = request.get_json(silent=True)
+    response = services.agregarInstitutos(req)
+    print(response)
+    db.session.add(response)
+    db.session.commit()
+    return make_response(jsonify({"resultado":"ok"}))
+
+@app.route("/agregarEstacion",methods=["POST"])
+def agregarEstacion():
+    req = request.get_json(silent=True)
+    response = services.agregarEstaciones(req)
+    print(response)
+    db.session.add(response)
+    db.session.commit()
+    return make_response(jsonify({"resultado":"ok"}))
+
+@app.route("/consultarRegistrosPorSismo",methods=["POST"])
+def consultaRegistros():
+    req = request.get_json(silent=True)
+    os.system("rm ./datos/*")
+    response = services.consultarRegistrosPS(req)
+    return make_response(jsonify({"resultado":"ok"}))
+
+###########################################################################
+#MODELS#
+###########################################################################
+
 class Componente(db.Model):
     id =db.Column(db.Integer, primary_key=True)
     componente = db.Column(db.String(10))
@@ -59,6 +97,7 @@ class Componente(db.Model):
 class Instituto(db.Model):
     id =db.Column(db.Integer, primary_key=True)
     nombre = db.Column(db.String(100))
+    clave = db.Column(db.String(8))
     estaciones = db.relationship('Estacion', backref='instituto')
 
 def dump_datetime(value):
@@ -75,6 +114,9 @@ class Sismo(db.Model):
     fecha = db.Column(db.DateTime)
     id_folder = db.Column(db.String(200))
     registros = db.relationship('Registro', backref='sismo')
+
+    def __str__(self):
+        return "id: {}, fecha: {}, magnitud: {}".format(self.id,self.fecha,self.magnitud)
     
     @property
     def serialize(self):
@@ -102,3 +144,4 @@ class Registro(db.Model):
     componente_id = db.Column(db.Integer, db.ForeignKey('componente.id')) 
     sismo_id = db.Column(db.Integer, db.ForeignKey('sismo.id'))
     registro = db.Column(db.String(100))
+    id_archivo = db.Column(db.String(100))

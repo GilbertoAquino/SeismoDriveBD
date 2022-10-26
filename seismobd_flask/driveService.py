@@ -18,8 +18,8 @@ def subir_archivo(ruta="",id_folder=id_folder):
         archivo = gd.CreateFile({'parents':[{'kind':"drive#fileLink", "id":id_folder}]})
         archivo['title'] = ruta.split("/")[-1]
         archivo.SetContentFile(ruta)
-        print("test")
         archivo.Upload()
+        response = archivo["id"]
     except:
         response = False
     return response
@@ -49,6 +49,13 @@ def consultar_directorio(nombre):
     if len(lista_archivos) > 1:
         raise ValueError("Se retorno mas de un directorio, revisar nombres.")
     return lista_archivos
+
+def descarga_archivo(id_arch):
+    gd = login()
+    archivo = gd.CreateFile({'id': id_arch})
+    nombre_archivo = archivo['title']
+    archivo.GetContentFile("./datos/"+nombre_archivo)
+
 
 def login():
     gauth = GoogleAuth()
