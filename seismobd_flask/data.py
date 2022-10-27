@@ -1,16 +1,27 @@
 import main
 from datetime import datetime as dt
+from time import time as tt
 
 def consultar_sismos_por_fecha(sismo):
-    fsismo = dt.strptime(sismo,"%Y-%m-%d")
-    query = main.Sismo.query.filter_by(fecha=fsismo).all()
-    return query
+    fsismo = dt.strptime(sismo,"%Y-%m-%d").date()
+    query = main.Sismo.query.all()
+    dummy = []
+    for i in query:
+        print(i.fecha.date(),fsismo)
+        if i.fecha.date() == fsismo:
+            dummy.append(i)
+    print(dummy)
+    return dummy
 
 def consultar_registros_PS(sismo_id,componente_id):
     if (componente_id == None):
-        query = main.Registro.query.filter_by(sismo_id=sismo_id).all()
+        query = main.Registro.query.filter_by(sismo_id=sismo_id).order_by(main.Registro.componente_id).all()
     else:
         query = main.Registro.query.filter_by(sismo_id=sismo_id,componente_id=componente_id).all()
+    return query
+
+def consultar_registro_detallado(sismo_id,estacion_id,componente_id):
+    query = main.Registro.query.filter_by(sismo_id=sismo_id,componente_id=componente_id,estacion_id=estacion_id).all()
     return query
 
 def consultar_instituto(clave):
@@ -20,8 +31,6 @@ def consultar_instituto(clave):
 def consultar_componente(comp=None):
     if comp == None:
         query = main.Componente.query.all()
-        for i in query:
-            print(i)
     else:
         query = main.Componente.query.filter_by(componente=comp).all()
     return query
@@ -35,12 +44,25 @@ def consultar_estacion(comp=None):
         query = main.Estacion.query.filter_by(clave=comp).all()
     return query
 
-def insertarSismo(latitud, longitud, magnitud, fecha,id_folder):
+def consultar_estacion_porID(id):
+    query = main.Estacion.query.filter_by(id=id).all()
+    return query[0]
+
+def consultar_componente_porID(id):
+    query = main.Componente.query.filter_by(id=id).all()
+    return query[0]
+
+def consultar_sismo_porID(id):
+    query = main.Sismo.query.filter_by(id=id).all()
+    return query[0]
+
+def insertarSismo(latitud, longitud, magnitud, fecha,hora,profundidad,id_folder):
     insert = main.Sismo()
     insert.latitud = latitud
     insert.longitud = longitud
     insert.magnitud = magnitud
-    fechadatetime = dt.strptime(fecha,"%Y-%m-%d")
+    fechadatetime = dt.strptime(fecha,"%Y-%m-%dT%H:%M:%S")
+    insert.profundidad = profundidad
     insert.fecha = fechadatetime
     insert.id_folder = id_folder
     return insert

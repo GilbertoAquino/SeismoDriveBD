@@ -3,6 +3,7 @@ from sqlalchemy import true
 from flask import Flask,jsonify,make_response,request
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from flask_cors import CORS, cross_origin
 import driveService as gs
 import services
 import data
@@ -16,6 +17,8 @@ app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_name  
 db=SQLAlchemy(app)
 migrate = Migrate(app,db,render_as_batch=True)
+cors = CORS(app)
+app.config['CORS_HEADERS'] = 'Content-Type'
 
 @app.route("/",methods=["GET"])
 def hello_world():
@@ -24,12 +27,12 @@ def hello_world():
     response = make_response(jsonify({"resultado":"ok"}))
     return response
 
-@app.route("/consultar", methods=["POST"])
-def consultarDatos():
-    req = request.get_json(silent=True)
-    res = gs.consultar_documentos("title='"+req["estacion"]+"'")
-    response =make_response(jsonify(res))
-    return response
+#@app.route("/consultar", methods=["POST"])
+#def consultarDatos():
+#    req = request.get_json(silent=True)
+#    res = gs.consultar_documentos("title='"+req["estacion"]+"'")
+#    response =make_response(jsonify(res))
+#    return response
 
 @app.route("/agregarRegistro",methods=["POST"])
 def agregarReg():
@@ -55,7 +58,8 @@ def agregaSis():
     response = make_response(jsonify({"resultado":"ok"}))
     return response
 
-@app.route("/consultarSismos",methods=["GET"])
+@app.route("/consultarTodoSismos",methods=["GET"])
+@cross_origin()
 def consultaSis():
     response = data.consultaTodoSismo()
     return make_response(jsonify(Sismos=[i.serialize for i in response]))
@@ -73,7 +77,8 @@ def agregaInstituto():
 def agregarEstacion():
     req = request.get_json(silent=True)
     response = services.agregarEstaciones(req)
-    print(response)
+    if(response == False):
+        return make_response(jsonify({"resultado":"bad request"}))
     db.session.add(response)
     db.session.commit()
     return make_response(jsonify({"resultado":"ok"}))
@@ -81,9 +86,8 @@ def agregarEstacion():
 @app.route("/consultarRegistrosPorSismo",methods=["POST"])
 def consultaRegistros():
     req = request.get_json(silent=True)
-    os.system("rm ./datos/*")
     response = services.consultarRegistrosPS(req)
-    return make_response(jsonify({"resultado":"ok"}))
+    return make_response(jsonify(response))
 
 ###########################################################################
 #MODELS#
@@ -104,12 +108,13 @@ def dump_datetime(value):
     """Deserialize datetime object into string form for JSON processing."""
     if value is None:
         return None
-    return value.strftime("%Y-%m-%d")
+    return value.strftime("%Y-%m-%d %H:%M:%S")
 
 class Sismo(db.Model):
     id =db.Column(db.Integer, primary_key=True)
     latitud = db.Column(db.Float)
     longitud = db.Column(db.Float)
+    profundidad = db.Column(db.Float)
     magnitud = db.Column(db.Float)
     fecha = db.Column(db.DateTime)
     id_folder = db.Column(db.String(200))
