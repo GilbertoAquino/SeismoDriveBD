@@ -1,6 +1,12 @@
+from datetime import datetime
 import driveService as gs
 import data
 import os
+import random
+import zipfile
+import threading
+
+abecedario="abcdefghijklmnopqrstuvwxyz1234567890"
 
 def agregarRegistro(req):
     ruta = req["archivo"]
@@ -100,3 +106,105 @@ def consultarRegistrosPS(req):
         dummy["sismo"] = sismo.fecha
         response.append(dummy)
     return response
+
+def consultarRegistrosPE(req):
+    estacion = req["estacion"]
+    componente_id = None
+    estacionobj = data.consultar_estacion(estacion.upper())
+    query = data.consultar_registros_PE(estacionobj[0].id,componente_id)
+    if (query == []):
+        return False
+    response = []
+    for i in query:
+        #gs.descarga_archivo(i.id_archivo)
+        dummy = {}
+        estacion = data.consultar_estacion_porID(i.estacion_id)
+        comp = data.consultar_componente_porID(i.componente_id)
+        sismo = data.consultar_sismo_porID(i.sismo_id)
+        dummy["link"] = "https://drive.google.com/uc?export=download&id="+i.id_archivo
+        dummy["estacion"] = estacion.clave
+        dummy["componente"] = comp.componente
+        dummy["sismo"] = sismo.fecha
+        response.append(dummy)
+    return response
+
+def consultaSismosPorParametros(req):
+    print(req)
+    try:
+        fecha_inicio = datetime.strptime(req["finicio"],"%Y-%m-%d")
+        fecha_fin = datetime.strptime(req["ffinal"],"%Y-%m-%d")
+    except:
+        fecha_inicio=''
+        fecha_fin=''
+    m_init = req['minicio']
+    m_fin=req['mfinal']
+    p_init=req['pinicio']
+    p_fin=req['pfinal']
+    if ((m_init != '' and m_fin != '') or (p_init != '' and p_fin != '')):
+        sismos = data.consultar_sismos_parametros(m_init,m_fin,p_init,p_fin)
+    else:
+        sismos = data.consultaTodoSismo()
+    dummy=[]
+    if(fecha_inicio != '' and fecha_fin != ''):
+        for i in sismos:
+            if(i.fecha>fecha_inicio and i.fecha < fecha_fin ):
+                dummy.append(i)
+        return dummy
+    return sismos
+
+def descargaZip(req):
+    sismo = req["sismo"]
+    componente = req["componente"]
+    if componente == "all":
+        componente_id = None
+    else:
+        objcomp = data.consultar_componente(componente)
+        componente_id = objcomp[0].id
+    sismoobj = data.consultar_sismos_por_fecha(sismo)
+    query = data.consultar_registros_PS(sismoobj[0].id,componente_id)
+    directorio = random_directory()
+    registro=[]
+    for i in query:
+        gs.descarga_archivo(i.id_archivo,directorio)
+        registro.append("datos/"+directorio+"/"+i.registro)
+    file = "datos/"+sismo+"-"+componente+".zip"
+    with zipfile.ZipFile(file, mode="w") as archive:
+        for filename in registro:
+            archive.write(filename)
+    os.system("rm -r datos/"+directorio)
+    t1 = threading.Thread(target=erraze_zip, args=[file])
+    t1.start()
+    return file
+
+def descargaZipEst(req):
+    estacion = req["estacion"]
+    componente_id = None
+    estacionobj = data.consultar_estacion(estacion.upper())
+    query = data.consultar_registros_PE(estacionobj[0].id,componente_id)
+    directorio = random_directory()
+    registro=[]
+    if (query == []):
+        return False
+    for i in query:
+        gs.descarga_archivo(i.id_archivo,directorio)
+        registro.append("datos/"+directorio+"/"+i.registro)
+    file = "datos/"+estacion+".zip"
+    with zipfile.ZipFile(file, mode="w") as archive:
+        for filename in registro:
+            archive.write(filename)
+    os.system("rm -r datos/"+directorio)
+    t1 = threading.Thread(target=erraze_zip, args=[file])
+    t1.start()
+    return file
+
+def erraze_zip(file):
+    import time
+    time.sleep(10)
+    os.system(os.system("rm -r "+file))
+
+def random_directory():
+    string=""
+    for i in range(0,20):
+        string+=random.choice(abecedario)
+    os.system("mkdir ./datos/"+string)
+    return string

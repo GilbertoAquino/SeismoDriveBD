@@ -50,11 +50,11 @@ def consultar_directorio(nombre):
         raise ValueError("Se retorno mas de un directorio, revisar nombres.")
     return lista_archivos
 
-def descarga_archivo(id_arch):
+def descarga_archivo(id_arch,directorio):
     gd = login()
     archivo = gd.CreateFile({'id': id_arch})
     nombre_archivo = archivo['title']
-    archivo.GetContentFile("./datos/"+nombre_archivo)
+    archivo.GetContentFile("./datos/"+directorio+"/"+nombre_archivo)
 
 
 def login():

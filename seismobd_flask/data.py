@@ -7,17 +7,22 @@ def consultar_sismos_por_fecha(sismo):
     query = main.Sismo.query.all()
     dummy = []
     for i in query:
-        print(i.fecha.date(),fsismo)
         if i.fecha.date() == fsismo:
             dummy.append(i)
-    print(dummy)
     return dummy
 
 def consultar_registros_PS(sismo_id,componente_id):
     if (componente_id == None):
-        query = main.Registro.query.filter_by(sismo_id=sismo_id).order_by(main.Registro.componente_id).all()
+        query = main.Registro.query.filter_by(sismo_id=sismo_id).order_by(main.Registro.registro).all()
     else:
         query = main.Registro.query.filter_by(sismo_id=sismo_id,componente_id=componente_id).all()
+    return query
+
+def consultar_registros_PE(estacion_id,componente_id):
+    if (componente_id == None):
+        query = main.Registro.query.filter_by(estacion_id=estacion_id).order_by(main.Registro.sismo_id).all()
+    else:
+        query = main.Registro.query.filter_by(sismo_id=estacion_id,componente_id=componente_id).all()
     return query
 
 def consultar_registro_detallado(sismo_id,estacion_id,componente_id):
@@ -38,8 +43,6 @@ def consultar_componente(comp=None):
 def consultar_estacion(comp=None):
     if comp == None:
         query = main.Estacion.query.all()
-        for i in query:
-            print(i)
     else:
         query = main.Estacion.query.filter_by(clave=comp).all()
     return query
@@ -93,5 +96,13 @@ def insertarRegistro(registro,est_id,comp_id,sismo_id,id_a):
 
 def consultaTodoSismo():
     query = main.Sismo.query.order_by(main.Sismo.fecha).all()
-    print(query)
+    return query
+
+def consultar_sismos_parametros(m1,m2,p1,p2):
+    if (m1 == '' or m2 == ''):
+        query = main.Sismo.query.filter(main.Sismo.profundidad>=p1, main.Sismo.profundidad<=p2).order_by(main.Sismo.fecha).all()
+    elif (p1 == '' or p2 == ''):
+        query = main.Sismo.query.filter(main.Sismo.magnitud>=m1, main.Sismo.magnitud<=m2).order_by(main.Sismo.fecha).all()
+    else:
+        query = main.Sismo.query.filter(main.Sismo.profundidad>=p1, main.Sismo.profundidad<=p2,main.Sismo.magnitud>=m1, main.Sismo.magnitud<=m2).order_by(main.Sismo.fecha).all()
     return query
