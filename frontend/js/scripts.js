@@ -7,7 +7,7 @@ function loadJSON() {
     $("#descargarTodoEst").addClass("d-none");
     $(".sismotabla").remove();
     $.ajax({
-       url:"http://localhost:5000/consultarTodoSismos",
+       url:"http://sismcs.pythonanywhere.com/consultarTodoSismos",
        type: "GET",
        success: function (result){
          $("#sismotitulo").text("");
@@ -40,7 +40,7 @@ function loadJSON() {
    p1 = $("#pinicio").val();
    p2 = $("#pfinal").val();
    $.ajax({
-      url:"http://localhost:5000/consultarSismosParametros",
+      url:"http://sismcs.pythonanywhere.com/consultarSismosParametros",
       type: "POST",
       contentType:"application/json; charset=utf-8",
       dataType:"json",
@@ -80,7 +80,7 @@ function loadJSON() {
     gsismo = sismos
     gcomponente = comp
     $.ajax({
-       url:"http://localhost:5000/consultarRegistrosPorSismo",
+       url:"http://sismcs.pythonanywhere.com/consultarRegistrosPorSismo",
        type:"POST",
        contentType:"application/json; charset=utf-8",
        dataType:"json",
@@ -110,7 +110,7 @@ function loadJSON() {
    var estacions = $("#id_estacion_search").val();
    gest = estacions;
    $.ajax({
-      url:"http://localhost:5000/consultarRegistrosPorEstacion",
+      url:"http://sismcs.pythonanywhere.com/consultarRegistrosPorEstacion",
       type:"POST",
       contentType:"application/json; charset=utf-8",
       dataType:"json",
@@ -136,7 +136,7 @@ function loadJSON() {
 }
 function descargarTodoS(){
    $.ajax({
-      url:"http://localhost:5000/descargaZip",
+      url:"http://sismcs.pythonanywhere.com/descargaZip",
       type:"POST",
       contentType:"application/json; charset=utf-8",
       dataType:"json",
@@ -155,7 +155,7 @@ function descargarTodoS(){
 }
 function descargarTodoE(){
    $.ajax({
-      url:"http://localhost:5000/descargaZipEst",
+      url:"http://sismcs.pythonanywhere.com/descargaZipEst",
       type:"POST",
       contentType:"application/json; charset=utf-8",
       dataType:"json",
@@ -185,7 +185,7 @@ function login(){
    user = $("#username_id").val();
    pass = $("#password_id").val();
    $.ajax({
-      url:"http://localhost:5000/login",
+      url:"http://sismcs.pythonanywhere.com/login",
       type:"POST",
       contentType:"application/json; charset=utf-8",
       dataType:"json",

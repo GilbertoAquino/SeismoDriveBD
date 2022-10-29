@@ -47,7 +47,7 @@
     <script>
         $( document ).ready(function() {
            $.ajax({
-           url:"http://localhost:5000",
+           url:"http://sismcs.pythonanywhere.com",
            type:"GET",
            headers: {'Authorization': 'Bearer '+readCookie("access_token")},
            contentType:"application/json; charset=utf-8",
