@@ -153,6 +153,7 @@ def consultaSismosPorParametros(req):
     return sismos
 
 def descargaZip(req):
+    os.chdir("SeismoDriveBD/seismobd_flask/datos")
     sismo = req["sismo"]
     componente = req["componente"]
     if componente == "all":
@@ -166,17 +167,19 @@ def descargaZip(req):
     registro=[]
     for i in query:
         gs.descarga_archivo(i.id_archivo,directorio)
-        registro.append("datos/"+directorio+"/"+i.registro)
-    file = "datos/"+sismo+"-"+componente+".zip"
+        registro.append(directorio+"/"+i.registro)
+    file = sismo+"-"+componente+".zip"
     with zipfile.ZipFile(file, mode="w") as archive:
         for filename in registro:
             archive.write(filename)
-    os.system("rm -r datos/"+directorio)
+    os.system("rm -r /home/SisMCS/SeismoDriveBD/seismobd_flask/datos/"+directorio)
+    os.chdir("../../../")
     t1 = threading.Thread(target=erraze_zip, args=[file])
     t1.start()
     return file
 
 def descargaZipEst(req):
+    os.chdir("SeismoDriveBD/seismobd_flask/datos")
     estacion = req["estacion"]
     componente_id = None
     estacionobj = data.consultar_estacion(estacion.upper())
@@ -187,12 +190,13 @@ def descargaZipEst(req):
         return False
     for i in query:
         gs.descarga_archivo(i.id_archivo,directorio)
-        registro.append("datos/"+directorio+"/"+i.registro)
-    file = "datos/"+estacion+".zip"
+        registro.append(directorio+"/"+i.registro)
+    file = estacion+".zip"
     with zipfile.ZipFile(file, mode="w") as archive:
         for filename in registro:
             archive.write(filename)
-    os.system("rm -r datos/"+directorio)
+    os.system("rm -r /home/SisMCS/SeismoDriveBD/seismobd_flask/datos/"+directorio)
+    os.chdir("../../../")
     t1 = threading.Thread(target=erraze_zip, args=[file])
     t1.start()
     return file
@@ -200,11 +204,11 @@ def descargaZipEst(req):
 def erraze_zip(file):
     import time
     time.sleep(10)
-    os.system(os.system("rm -r "+file))
+    os.system("rm -r /home/SisMCS/SeismoDriveBD/seismobd_flask/datos/"+file)
 
 def random_directory():
     string=""
     for i in range(0,20):
         string+=random.choice(abecedario)
-    os.system("mkdir ./datos/"+string)
+    os.system("mkdir /home/SisMCS/SeismoDriveBD/seismobd_flask/datos/"+string)
     return string

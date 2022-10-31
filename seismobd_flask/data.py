@@ -85,6 +85,15 @@ def agregarEstacion(nombre,clave,lat,lon,objinsti):
     insert.instituto_id = objinsti.id
     return insert
 
+def agregarUsuario(user,hashpass):
+    try:
+        insert = main.User()
+        insert.username = user
+        insert.hashed_password = hashpass
+        return insert
+    except:
+        return False
+
 def insertarRegistro(registro,est_id,comp_id,sismo_id,id_a):
     insert = main.Registro()
     insert.registro = registro

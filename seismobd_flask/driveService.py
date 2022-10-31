@@ -3,7 +3,7 @@ from pydrive2.auth import GoogleAuth
 from pydrive2.drive import GoogleDrive
 import data
 
-credenciales= "credentials_module.json"
+credenciales= "/home/SisMCS/SeismoDriveBD/seismobd_flask/credentials_module.json"
 id_folder = "1Y_Cf3xBnjqcJPyDvgLyNaW5sbtRy02eF"
 
 def auth():
@@ -54,7 +54,7 @@ def descarga_archivo(id_arch,directorio):
     gd = login()
     archivo = gd.CreateFile({'id': id_arch})
     nombre_archivo = archivo['title']
-    archivo.GetContentFile("./datos/"+directorio+"/"+nombre_archivo)
+    archivo.GetContentFile("/home/SisMCS/SeismoDriveBD/seismobd_flask/datos/"+directorio+"/"+nombre_archivo)
 
 
 def login():
@@ -65,4 +65,3 @@ def login():
     else:
         gauth.Authorize()
     return GoogleDrive(gauth)
-    

@@ -1,6 +1,6 @@
 from enum import unique
 from sqlalchemy import true
-from flask import Flask,jsonify,make_response,request,send_file
+from flask import Flask,jsonify,make_response,request,send_file,current_app
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 from flask_cors import CORS, cross_origin
@@ -11,8 +11,8 @@ import os
 import flask_praetorian
 
 app = Flask(__name__,
-            static_url_path='/datos', 
-            static_folder='./datos')
+            static_url_path='/datos',
+            static_folder='/datos')
 db_name = "seismobd.sqlite3"
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + db_name
@@ -146,31 +146,42 @@ def consultaSismosPorParametros():
 def descargaz():
     req = request.get_json(silent=True)
     response = services.descargaZip(req)
-    return make_response(jsonify({"link":"http://localhost:5000/"+response}))
+    return make_response(jsonify({"link":"https://sismcs.pythonanywhere.com/downloads/"+response}))
 
 @app.route("/descargaZipEst",methods=["POST"])
 @flask_praetorian.auth_required
 def descargaze():
     req = request.get_json(silent=True)
     response = services.descargaZipEst(req)
-    return make_response(jsonify({"link":"http://localhost:5000/"+response}))
+    return make_response(jsonify({"link":"https://sismcs.pythonanywhere.com/downloads/"+response}))
     #return make_response(jsonify(Sismos=[i.serialize for i in response]))
 
 @app.route("/login", methods=["POST"])
 def login():
-    """
-    Logs a user in by parsing a POST request containing user credentials and
-    issuing a JWT token.
-    .. example::
-       $ curl http://localhost:5000/login -X POST \
-         -d '{"username":"Walter","password":"calmerthanyouare"}'
-    """
     req = request.get_json(force=True)
     username = req.get("username", None)
     password = req.get("password", None)
     user = guard.authenticate(username, password)
     ret = {"access_token": guard.encode_jwt_token(user)}
     return (jsonify(ret), 200)
+
+@app.route('/downloads/<path:path>', methods=['GET'])
+def download(path):
+    zip_path="/home/SisMCS/SeismoDriveBD/seismobd_flask/datos/"
+    file_name =path
+    entry = os.path.join(zip_path, path)
+    return send_file(entry, mimetype='zip', as_attachment=True, attachment_filename=file_name)
+
+@app.route("/agregarUsuario",methods=["POST"])
+@flask_praetorian.auth_required
+def agregarUsu():
+    req = request.get_json(silent=True)
+    response = data.agregarUsuario(req["username"],guard.hash_password(req["password"]))
+    if(response == False):
+        return make_response(jsonify({"resultado":"bad request"}))
+    db.session.add(response)
+    db.session.commit()
+    return make_response(jsonify({"resultado":"ok"}))
 
 ###########################################################################
 #MODELS#
@@ -205,7 +216,7 @@ class Sismo(db.Model):
 
     def __str__(self):
         return "id: {}, fecha: {}, magnitud: {}".format(self.id,self.fecha,self.magnitud)
-    
+
     @property
     def serialize(self):
        """Return object data in easily serializable format"""
@@ -230,7 +241,7 @@ class Estacion(db.Model):
 class Registro(db.Model):
     id =db.Column(db.Integer, primary_key=True)
     estacion_id = db.Column(db.Integer, db.ForeignKey('estacion.id'))
-    componente_id = db.Column(db.Integer, db.ForeignKey('componente.id')) 
+    componente_id = db.Column(db.Integer, db.ForeignKey('componente.id'))
     sismo_id = db.Column(db.Integer, db.ForeignKey('sismo.id'))
     registro = db.Column(db.String(100))
     id_archivo = db.Column(db.String(100))
