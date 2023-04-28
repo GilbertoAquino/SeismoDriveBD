@@ -64,7 +64,7 @@ guard.init_app(app, User)
 @app.route("/",methods=["GET"])
 @flask_praetorian.auth_required
 def hello_world():
-    response = make_response(jsonify({"resultado":"ok"}))
+    response = make_response(jsonify({"Usuario":flask_praetorian.current_user().username,"role":flask_praetorian.current_user().roles}))
     return response
 
 @app.route("/agregarRegistro",methods=["POST"])
@@ -181,6 +181,39 @@ def agregarUsu():
         return make_response(jsonify({"resultado":"bad request"}))
     db.session.add(response)
     db.session.commit()
+    return make_response(jsonify({"resultado":"ok"}))
+
+@app.route("/consultarUsuario",methods=["GET"])
+@flask_praetorian.roles_required("admin")
+def consultarUsu():
+    query = User.query.all()
+    all = []
+    for i in query:
+        dummy={}
+        dummy["id"] = i.id
+        dummy["username"] = i.username
+        dummy["role"]=i.roles
+        all.append(dummy)
+    #response = data.agregarUsuario(req["username"],guard.hash_password(req["password"]))
+    #if(response == False):
+    #    return make_response(jsonify({"resultado":"bad request"}))
+    #db.session.add(response)
+    #db.session.commit()
+    return make_response(jsonify(all))
+
+@app.route("/eliminarUsuario/<path:path>",methods=["DELETE"])
+@flask_praetorian.roles_required("admin")
+def eliminarUsu(path):
+    query1 = User.query.filter_by(id=int(path)).all()
+    if(query1[0].roles == "admin"):
+        raise ValueError("CHALE BROU")
+    query = User.query.filter_by(id=int(path)).delete()
+    db.session.commit()
+    #response = data.agregarUsuario(req["username"],guard.hash_password(req["password"]))
+    #if(response == False):
+    #    return make_response(jsonify({"resultado":"bad request"}))
+    #db.session.add(response)
+    #db.session.commit()
     return make_response(jsonify({"resultado":"ok"}))
 
 ###########################################################################

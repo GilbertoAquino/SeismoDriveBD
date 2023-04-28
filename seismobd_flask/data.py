@@ -90,6 +90,7 @@ def agregarUsuario(user,hashpass):
         insert = main.User()
         insert.username = user
         insert.hashed_password = hashpass
+        insert.roles = "Usuario"
         return insert
     except:
         return False
